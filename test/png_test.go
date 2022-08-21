@@ -3,7 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/binary"
-	"ios-png-images-normalizer/internal/iospng"
+	"github.com/Herbert8/ios-png-images-normalizer/pkg/iospng"
 	"os"
 	"testing"
 )
