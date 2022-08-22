@@ -245,7 +245,7 @@ func (receiver *PNGImage) ImageSize() *ImageSize {
 	return imgSize
 }
 
-func (receiver *PNGImage) NormalizerImageChunks() (*PNGImage, error) {
+func (receiver *PNGImage) Normalize() (*PNGImage, error) {
 
 	// 用于存储整理后的 ImageChunk 数组
 	var imgChunks []*ImageChunk

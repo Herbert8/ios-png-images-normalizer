@@ -30,7 +30,7 @@ func TestChunkHeader(t *testing.T) {
 
 func TestPngImg(t *testing.T) {
 	pngImg, _ := iospng.ParsePngFile(pngFile)
-	normalPngImg, _ := pngImg.NormalizerImageChunks()
+	normalPngImg, _ := pngImg.Normalize()
 	data := normalPngImg.SaveToData()
 	_ = os.WriteFile(newPngFile1, data, 0644)
 }
