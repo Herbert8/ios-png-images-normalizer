@@ -67,8 +67,8 @@ func (receiver *ChunkHeader) GetChunkType() string {
 
 // ImageSize 图像的尺寸（宽、长）
 type ImageSize struct {
-	Width  uint32
-	Height uint32
+	Width  int32
+	Height int32
 }
 
 // ImageChunk PNG 的数据块
@@ -103,8 +103,8 @@ func (receiver *ImageChunk) GetHeader() ChunkHeader {
 	return receiver.header
 }
 
-// getImageSize IHDR 类型的块包含图像的尺寸信息
-func (receiver *ImageChunk) getImageSize() *ImageSize {
+// tryGetImageSize IHDR 类型的块包含图像的尺寸信息
+func (receiver *ImageChunk) tryGetImageSize() *ImageSize {
 	retImgSize := &ImageSize{}
 	// 如果数据块类型为 IHDR
 	if receiver.header.GetChunkType() == "IHDR" {
@@ -186,6 +186,7 @@ func CheckPngFileHeader(pngFilename string) (bool, error) {
 }
 
 type PNGImage struct {
+	imageSize   ImageSize
 	imageChunks []*ImageChunk
 }
 
@@ -221,6 +222,13 @@ func ParsePngFileData(pngFileData []byte) (*PNGImage, error) {
 	// 为 PNGImage 指定 相关 数据块
 	retPngImg.imageChunks = pngChunks
 
+	imgSize := retPngImg.getImageSize()
+	if imgSize != nil {
+		retPngImg.imageSize = *imgSize
+	} else {
+		retPngImg.imageSize = ImageSize{Width: -1, Height: -1}
+	}
+
 	return retPngImg, nil
 }
 
@@ -233,16 +241,21 @@ func ParsePngFile(pngFile string) (*PNGImage, error) {
 	return ParsePngFileData(pngFileData)
 }
 
-// ImageSize 解析 PNG 文件数据（不包含 PNG 文件头），获取图片尺寸
-func (receiver *PNGImage) ImageSize() *ImageSize {
+// 获取图片尺寸
+func (receiver *PNGImage) getImageSize() *ImageSize {
 	var imgSize *ImageSize
 	for _, imgChunk := range receiver.imageChunks {
-		imgSize = imgChunk.getImageSize()
+		imgSize = imgChunk.tryGetImageSize()
 		if imgSize != nil {
 			break
 		}
 	}
 	return imgSize
+}
+
+// GetImageSize 获取图片尺寸
+func (receiver *PNGImage) GetImageSize() ImageSize {
+	return receiver.imageSize
 }
 
 func (receiver *PNGImage) Normalize() (*PNGImage, error) {
@@ -253,7 +266,7 @@ func (receiver *PNGImage) Normalize() (*PNGImage, error) {
 	// 用于收集所有 IDAT 数据块中数据的数组
 	var allIDAT []byte
 
-	imgSize := receiver.ImageSize()
+	imgSize := receiver.getImageSize()
 
 	// 遍历所有数据块
 	for _, chunk := range receiver.imageChunks {
